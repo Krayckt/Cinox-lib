@@ -30,7 +30,7 @@ local function createColorPicker(parent, callback)
     PickerFrame.BackgroundTransparency = 1
     PickerFrame.Parent = parent
 
-    -- Der Ring (Video Style)
+    -- Der Ring
     local Ring = Instance.new("ImageLabel")
     Ring.Size = UDim2.new(1, 0, 1, 0)
     Ring.Image = "rbxassetid://6020299385" -- Ring Textur
@@ -182,5 +182,6 @@ function UGS.Init(manifest)
 
     return Library
 end
+
 
 return UGS
