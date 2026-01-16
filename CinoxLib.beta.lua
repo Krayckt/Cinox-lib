@@ -4,10 +4,9 @@ local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- Utility: Dragging
+-- Dragging Logik (PC & Handy)
 local function CreateDrag(gui, target)
     local dragging, dragStart, startPos
-    gui.Active = true
     gui.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true; dragStart = input.Position; startPos = target.Position
@@ -22,51 +21,45 @@ local function CreateDrag(gui, target)
     end)
 end
 
--- Utility: ColorPicker
-local function CreateColorPicker(callback, isMobile, mainFrame)
-    if mainFrame:FindFirstChild("CP_Frame") then mainFrame.CP_Frame:Destroy() return end
-    local CP = Instance.new("Frame"); CP.Name = "CP_Frame"; CP.Size = UDim2.new(0, 170, 0, 185); CP.Position = UDim2.new(1, 10, 0, 50); CP.BackgroundColor3 = Color3.fromRGB(25, 25, 25); CP.Parent = mainFrame; CP.ZIndex = 2000; Instance.new("UICorner", CP)
-    local Wheel = Instance.new("ImageButton"); Wheel.Size = UDim2.new(0, 130, 0, 130); Wheel.Position = UDim2.new(0.5, -65, 0, 10); Wheel.Image = "rbxassetid://7393858638"; Wheel.BackgroundTransparency = 1; Wheel.Parent = CP; Wheel.ZIndex = 2001
-    local Picker = Instance.new("Frame"); Picker.Size = UDim2.new(0, 10, 0, 10); Picker.BackgroundColor3 = Color3.new(1,1,1); Picker.Parent = Wheel; Picker.ZIndex = 2002; Instance.new("UICorner", Picker).CornerRadius = UDim.new(1,0)
-    
-    local drag = false
-    local function update(input)
-        local center = Wheel.AbsolutePosition + (Wheel.AbsoluteSize / 2)
-        local vec = Vector2.new(input.Position.X, input.Position.Y) - center
-        local angle = math.atan2(vec.Y, vec.X); local radius = math.min(vec.Magnitude, 65)
-        Picker.Position = UDim2.new(0.5, math.cos(angle) * radius - 5, 0.5, math.sin(angle) * radius - 5)
-        callback(Color3.fromHSV((math.pi - angle) / (2 * math.pi), radius / 65, 1))
-    end
-    Wheel.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then drag = true update(i) end end)
-    UserInputService.InputChanged:Connect(function(i) if drag and i.UserInputType == Enum.UserInputType.MouseMovement then update(i) end end)
-    UserInputService.InputEnded:Connect(function() drag = false end)
-    local Close = Instance.new("TextButton"); Close.Size = UDim2.new(1, -20, 0, 25); Close.Position = UDim2.new(0, 10, 1, -30); Close.Text = "OK"; Close.Parent = CP; Close.MouseButton1Click:Connect(function() CP:Destroy() end)
-end
-
 function Cinox.Init(manifest)
-    local SG = Instance.new("ScreenGui"); SG.Name = manifest.Name; SG.Parent = LocalPlayer.PlayerGui; SG.ResetOnSpawn = false
+    local SG = Instance.new("ScreenGui"); SG.Name = manifest.Name; SG.Parent = LocalPlayer:WaitForChild("PlayerGui"); SG.ResetOnSpawn = false
     local isMobile = UserInputService.TouchEnabled
-    local MF = Instance.new("Frame"); MF.Size = UDim2.new(0, 550, 0, 350); MF.Position = UDim2.new(0.5, -275, 0.5, -175); MF.BackgroundColor3 = Color3.fromRGB(35, 35, 35); MF.Parent = SG; Instance.new("UICorner", MF)
     
-    local TB = Instance.new("Frame"); TB.Size = UDim2.new(1, 0, 0, 35); TB.BackgroundColor3 = Color3.fromRGB(20, 20, 20); TB.Parent = MF; CreateDrag(TB, MF); Instance.new("UICorner", TB)
-    local CloseBtn = Instance.new("TextButton"); CloseBtn.Text = "X"; CloseBtn.Size = UDim2.new(0, 25, 0, 25); CloseBtn.Position = UDim2.new(1, -30, 0, 5); CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50); CloseBtn.Parent = TB; CloseBtn.MouseButton1Click:Connect(function() SG:Destroy() end)
+    local MF = Instance.new("Frame"); MF.Name = "MainFrame"; MF.Parent = SG; MF.BackgroundColor3 = Color3.fromRGB(35, 35, 35); Instance.new("UICorner", MF)
+    MF.Size = UDim2.new(0, 550, 0, 350); MF.Position = UDim2.new(0.5, -275, 0.5, -175)
+    
+    -- TitleBar
+    local TB = Instance.new("Frame"); TB.Size = UDim2.new(1, 0, 0, 35); TB.BackgroundColor3 = Color3.fromRGB(20, 20, 20); TB.Parent = MF; Instance.new("UICorner", TB); CreateDrag(TB, MF)
+    
+    -- CLOSE BUTTON
+    local CloseBtn = Instance.new("TextButton"); CloseBtn.Text = "X"; CloseBtn.Size = UDim2.new(0, 25, 0, 25); CloseBtn.Position = UDim2.new(1, -30, 0, 5); CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50); CloseBtn.TextColor3 = Color3.new(1,1,1); CloseBtn.Parent = TB; Instance.new("UICorner", CloseBtn)
+    
+    -- MINIMIZE BUTTON (Wieder da!)
+    local MinBtn = Instance.new("TextButton"); MinBtn.Text = "-"; MinBtn.Size = UDim2.new(0, 25, 0, 25); MinBtn.Position = UDim2.new(1, -60, 0, 5); MinBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60); MinBtn.TextColor3 = Color3.new(1,1,1); MinBtn.Parent = TB; Instance.new("UICorner", MinBtn)
 
-    local TabContainer = Instance.new("ScrollingFrame"); TabContainer.Size = UDim2.new(0, 110, 1, -50); TabContainer.Position = UDim2.new(0, 5, 0, 45); TabContainer.BackgroundTransparency = 1; TabContainer.Parent = MF; Instance.new("UIListLayout", TabContainer).Padding = UDim.new(0, 5)
-    local PageContainer = Instance.new("Frame"); PageContainer.Size = UDim2.new(1, -130, 1, -50); PageContainer.Position = UDim2.new(0, 120, 0, 45); PageContainer.BackgroundTransparency = 1; PageContainer.Parent = MF
+    local TabC = Instance.new("ScrollingFrame"); TabC.Size = UDim2.new(0, 110, 1, -50); TabC.Position = UDim2.new(0, 5, 0, 45); TabC.BackgroundTransparency = 1; TabC.Parent = MF; Instance.new("UIListLayout", TabC).Padding = UDim.new(0, 5)
+    local PageC = Instance.new("Frame"); PageC.Size = UDim2.new(1, -130, 1, -50); PageC.Position = UDim2.new(0, 120, 0, 45); PageC.BackgroundTransparency = 1; PageC.Parent = MF
+
+    local isMin, fullSize = false, MF.Size
+    MinBtn.MouseButton1Click:Connect(function()
+        isMin = not isMin
+        TabC.Visible = not isMin; PageC.Visible = not isMin
+        MF:TweenSize(isMin and UDim2.new(0, 200, 0, 35) or fullSize, "Out", "Quad", 0.3, true)
+    end)
+    CloseBtn.MouseButton1Click:Connect(function() SG:Destroy() end)
 
     local Lib = {Scripts = {}}
     function Lib:AddScript(n, f) Lib.Scripts[n] = f end
 
     function Lib:AddTab(conf)
-        local TabBtn = Instance.new("TextButton"); TabBtn.Size = UDim2.new(1, 0, 0, 30); TabBtn.Text = conf.Name; TabBtn.Parent = TabContainer; Instance.new("UICorner", TabBtn)
-        local Page = Instance.new("ScrollingFrame"); Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.Visible = false; Page.Parent = PageContainer; Page.AutomaticCanvasSize = "Y"
+        local TabBtn = Instance.new("TextButton"); TabBtn.Size = UDim2.new(1, 0, 0, 30); TabBtn.Text = conf.Name; TabBtn.Parent = TabC; Instance.new("UICorner", TabBtn)
+        local Page = Instance.new("ScrollingFrame"); Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.Visible = false; Page.Parent = PageC; Page.AutomaticCanvasSize = "Y"
         Instance.new("UIListLayout", Page).Padding = UDim.new(0, 5)
-        TabBtn.MouseButton1Click:Connect(function() for _, p in pairs(PageContainer:GetChildren()) do p.Visible = false end Page.Visible = true end)
+        TabBtn.MouseButton1Click:Connect(function() for _, p in pairs(PageC:GetChildren()) do p.Visible = false end Page.Visible = true end)
 
         local TabObj = {POMs = {}}
         function TabObj:AddTool(t)
             local target = Page
-            -- POM System
             if t["Do.POM"] then
                 if not TabObj.POMs[t.PartOfMenu] then
                     local pomF = Instance.new("Frame"); pomF.Size = UDim2.new(1, 0, 0, 30); pomF.BackgroundColor3 = Color3.fromRGB(25, 25, 25); pomF.Parent = Page; pomF.ClipsDescendants = true; Instance.new("UICorner", pomF)
@@ -81,23 +74,27 @@ function Cinox.Init(manifest)
                 target = TabObj.POMs[t.PartOfMenu]
             end
 
-            local b = Instance.new("Frame"); b.Size = UDim2.new(1, 0, 0, 35); b.BackgroundColor3 = Color3.fromRGB(50, 50, 50); b.Parent = target; Instance.new("UICorner", b)
-            local lbl = Instance.new("TextLabel"); lbl.Text = "  " .. t.Name; lbl.Size = UDim2.new(0.5, 0, 1, 0); lbl.BackgroundTransparency = 1; lbl.TextColor3 = Color3.new(1,1,1); lbl.TextXAlignment = "Left"; lbl.Parent = b
+            local b = Instance.new("Frame"); b.Size = UDim2.new(1, 0, 0, 40); b.BackgroundColor3 = Color3.fromRGB(50, 50, 50); b.Parent = target; Instance.new("UICorner", b)
+            local lbl = Instance.new("TextLabel"); lbl.Text = "  " .. t.Name; lbl.Size = UDim2.new(0.4, 0, 1, 0); lbl.BackgroundTransparency = 1; lbl.TextColor3 = Color3.new(1,1,1); lbl.TextXAlignment = "Left"; lbl.Parent = b
 
-            if t.Look == "ColorPick" then
-                local ind = Instance.new("TextButton"); ind.Size = UDim2.new(0, 20, 0, 20); ind.Position = UDim2.new(1, -30, 0.5, -10); ind.Text = ""; ind.Parent = b; Instance.new("UICorner", ind)
-                ind.MouseButton1Click:Connect(function() CreateColorPicker(function(c) ind.BackgroundColor3 = c if Lib.Scripts[t.Name] then Lib.Scripts[t.Name](c) end end, isMobile, MF) end)
-            
-            elseif t.Look == "Slider" then
-                local sB = Instance.new("TextButton"); sB.Size = UDim2.new(0.4, 0, 0, 10); sB.Position = UDim2.new(0.55, 0, 0.5, -5); sB.BackgroundColor3 = Color3.fromRGB(30,30,30); sB.Text = ""; sB.Parent = b; Instance.new("UICorner", sB)
+            if t.Look == "Slider" then
+                local sB = Instance.new("TextButton"); sB.Size = UDim2.new(0.45, 0, 0, 12); sB.Position = UDim2.new(0.45, 0, 0.5, -6); sB.BackgroundColor3 = Color3.fromRGB(30,30,30); sB.Text = ""; sB.Parent = b; Instance.new("UICorner", sB)
                 local sF = Instance.new("Frame"); sF.Size = UDim2.new(0.5, 0, 1, 0); sF.BackgroundColor3 = Color3.fromRGB(0, 170, 255); sF.Parent = sB; Instance.new("UICorner", sF)
-                local val = Instance.new("TextLabel"); val.Size = UDim2.new(0, 30, 1, 0); val.Position = UDim2.new(1, 5, 0, 0); val.Text = "50"; val.TextColor3 = Color3.new(1,1,1); val.BackgroundTransparency = 1; val.Parent = sB
-                local function upS()
-                    local p = math.clamp((UserInputService:GetMouseLocation().X - sB.AbsolutePosition.X) / sB.AbsoluteSize.X, 0, 1)
-                    sF.Size = UDim2.new(p, 0, 1, 0); local res = math.floor(t.Min + (p * (t.Max - t.Min))); val.Text = tostring(res)
+                local valLbl = Instance.new("TextLabel"); valLbl.Size = UDim2.new(0, 35, 1, 0); valLbl.Position = UDim2.new(1, 5, 0, 0); valLbl.Text = tostring(t.Min); valLbl.TextColor3 = Color3.new(1,1,1); valLbl.BackgroundTransparency = 1; valLbl.Parent = sB
+
+                local function move(input)
+                    local inputPos = (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1) and input.Position.X or UserInputService:GetMouseLocation().X
+                    local relative = math.clamp((inputPos - sB.AbsolutePosition.X) / sB.AbsoluteSize.X, 0, 1)
+                    sF.Size = UDim2.new(relative, 0, 1, 0)
+                    local res = math.floor(t.Min + (relative * (t.Max - t.Min)))
+                    valLbl.Text = tostring(res)
                     if Lib.Scripts[t.Name] then Lib.Scripts[t.Name](res) end
                 end
-                sB.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then local c; c = UserInputService.InputChanged:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseMovement then upS() end end); UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then c:Disconnect() end end); upS() end end)
+
+                local active = false
+                sB.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then active = true move(i) end end)
+                UserInputService.InputChanged:Connect(function(i) if active and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then move(i) end end)
+                UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then active = false end end)
             end
         end
         return TabObj
