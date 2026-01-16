@@ -33,7 +33,7 @@ local function CreateColorPicker(parent, callback, isMobile, mainFrame)
 	CPFrame.Size = isMobile and UDim2.new(0, 200, 0, 250) or UDim2.new(0, 170, 0, 185)
 	CPFrame.Position = isMobile and UDim2.new(0.5, -100, 0.5, -125) or UDim2.new(1, 10, 0, 50)
 	CPFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-	CPFrame.ZIndex = 2000
+	CPFrame.ZIndex = 5000 -- Extrem hoch für List-Mode
 	CPFrame.Active = true
 	CPFrame.Parent = mainFrame
 	Instance.new("UICorner", CPFrame)
@@ -43,16 +43,16 @@ local function CreateColorPicker(parent, callback, isMobile, mainFrame)
 	Wheel.Name = "ColorWheel"
 	Wheel.Size = UDim2.new(0, 140, 0, 140)
 	Wheel.Position = UDim2.new(0.5, -70, 0, 10)
-	-- Erzwingt das Laden der Image-ID
-	Wheel.Image = "rbxassetid://7393858638" 
+	-- NEUE TEXTURE ID:
+	Wheel.Image = "rbxassetid://7393858625" 
 	Wheel.BackgroundTransparency = 1
-	Wheel.ZIndex = 2001
+	Wheel.ZIndex = 5001
 	Wheel.Parent = CPFrame
 	
 	local Picker = Instance.new("Frame")
 	Picker.Size = UDim2.new(0, 14, 0, 14)
 	Picker.BackgroundColor3 = Color3.new(1,1,1)
-	Picker.ZIndex = 2002
+	Picker.ZIndex = 5002
 	Picker.Position = UDim2.new(0.5, -7, 0.5, -7)
 	Picker.Parent = Wheel
 	Instance.new("UICorner", Picker).CornerRadius = UDim.new(1,0)
@@ -62,7 +62,7 @@ local function CreateColorPicker(parent, callback, isMobile, mainFrame)
 	CloseBtn.Size = UDim2.new(1, -20, 0, 30)
 	CloseBtn.Position = UDim2.new(0, 10, 1, -40)
 	CloseBtn.Text = "Fertig"
-	CloseBtn.ZIndex = 2001
+	CloseBtn.ZIndex = 5001
 	CloseBtn.Parent = CPFrame
 	Instance.new("UICorner", CloseBtn)
 	CloseBtn.MouseButton1Click:Connect(function() CPFrame:Destroy() end)
@@ -83,7 +83,7 @@ local function CreateColorPicker(parent, callback, isMobile, mainFrame)
 end
 
 function Cinox.Init(manifest)
-	local ScreenGui = Instance.new("ScreenGui"); ScreenGui.Name = manifest.Name; ScreenGui.ResetOnSpawn = false; ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+	local ScreenGui = Instance.new("ScreenGui"); ScreenGui.Name = manifest.Name; ScreenGui.ResetOnSpawn = false; ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui"); ScreenGui.DisplayOrder = 100
 	local isMobile = UserInputService.TouchEnabled
 	
 	local MainFrame = Instance.new("Frame"); MainFrame.Name = "MainFrame"; MainFrame.Active = true; MainFrame.Parent = ScreenGui; Instance.new("UICorner", MainFrame)
@@ -92,30 +92,36 @@ function Cinox.Init(manifest)
 	MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 	MainFrame.ClipsDescendants = false 
 	
-	local TitleBar = Instance.new("Frame"); TitleBar.Name = "TitleBar"; TitleBar.Size = UDim2.new(1, 0, 0, 35); TitleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20); TitleBar.Parent = MainFrame; Instance.new("UICorner", TitleBar); CreateDrag(TitleBar, MainFrame)
-	local TitleText = Instance.new("TextLabel"); TitleText.Text = "  "..manifest.Name; TitleText.Size = UDim2.new(0.6, 0, 1, 0); TitleText.BackgroundTransparency = 1; TitleText.TextColor3 = Color3.new(1,1,1); TitleText.Font = Enum.Font.GothamBold; TitleText.TextXAlignment = "Left"; TitleText.Parent = TitleBar
+	local TitleBar = Instance.new("Frame"); TitleBar.Name = "TitleBar"; TitleBar.Size = UDim2.new(1, 0, 0, 35); TitleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20); TitleBar.Parent = MainFrame; Instance.new("UICorner", TitleBar); CreateDrag(TitleBar, MainFrame); TitleBar.ZIndex = 5
 	
-	-- FIX: Direkte Erstellung der Buttons in der TitleBar
-	local CloseBtn = Instance.new("TextButton"); CloseBtn.Name = "Close"; CloseBtn.Text = "X"; CloseBtn.Size = UDim2.new(0, 25, 0, 25); CloseBtn.Position = UDim2.new(1, -30, 0, 5); CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50); CloseBtn.TextColor3 = Color3.new(1,1,1); CloseBtn.Parent = TitleBar; Instance.new("UICorner", CloseBtn)
-	local MinBtn = Instance.new("TextButton"); MinBtn.Name = "Minimize"; MinBtn.Text = "-"; MinBtn.Size = UDim2.new(0, 25, 0, 25); MinBtn.Position = UDim2.new(1, -60, 0, 5); MinBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60); MinBtn.TextColor3 = Color3.new(1,1,1); MinBtn.Parent = TitleBar; Instance.new("UICorner", MinBtn)
-	
+	-- BUTTONS FIX:
+	local function createTopBtn(name, text, color, pos, callback)
+		local btn = Instance.new("TextButton")
+		btn.Name = name; btn.Text = text; btn.Size = UDim2.new(0, 25, 0, 25); btn.Position = pos
+		btn.BackgroundColor3 = color; btn.TextColor3 = Color3.new(1,1,1); btn.ZIndex = 10; btn.Parent = TitleBar
+		Instance.new("UICorner", btn); btn.MouseButton1Click:Connect(callback)
+		return btn
+	end
+
 	local isMin, fullSize = false, MainFrame.Size
-	CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
-	MinBtn.MouseButton1Click:Connect(function()
+	local CloseBtn = createTopBtn("Close", "X", Color3.fromRGB(200, 50, 50), UDim2.new(1, -30, 0, 5), function() ScreenGui:Destroy() end)
+	local MinBtn = createTopBtn("Min", "-", Color3.fromRGB(60, 60, 60), UDim2.new(1, -60, 0, 5), function()
 		isMin = not isMin
-		MainFrame:FindFirstChild("TabContainer").Visible = not isMin
-		MainFrame:FindFirstChild("PageContainer").Visible = not isMin
+		MainFrame.TabContainer.Visible = not isMin
+		MainFrame.PageContainer.Visible = not isMin
 		TweenService:Create(MainFrame, TweenInfo.new(0.3), {Size = isMin and UDim2.new(0, 200, 0, 35) or fullSize}):Play()
 	end)
 
-	local TabContainer = Instance.new("ScrollingFrame"); TabContainer.Name = "TabContainer"; TabContainer.Size = UDim2.new(0, 110, 1, -80); TabContainer.Position = UDim2.new(0, 5, 0, 45); TabContainer.BackgroundTransparency = 1; TabContainer.Parent = MainFrame; Instance.new("UIListLayout", TabContainer).Padding = UDim.new(0, 5)
+	local TitleText = Instance.new("TextLabel"); TitleText.Text = "  "..manifest.Name; TitleText.Size = UDim2.new(0.6, 0, 1, 0); TitleText.BackgroundTransparency = 1; TitleText.TextColor3 = Color3.new(1,1,1); TitleText.Font = Enum.Font.GothamBold; TitleText.TextXAlignment = "Left"; TitleText.ZIndex = 6; TitleText.Parent = TitleBar
+	
+	local TabContainer = Instance.new("ScrollingFrame"); TabContainer.Name = "TabContainer"; TabContainer.Size = UDim2.new(0, 110, 1, -80); TabContainer.Position = UDim2.new(0, 5, 0, 45); TabContainer.BackgroundTransparency = 1; TabContainer.Parent = MainFrame; Instance.new("UIListLayout", TabContainer).Padding = UDim.new(0, 5); TabContainer.ScrollBarThickness = 0
 	local PageContainer = Instance.new("Frame"); PageContainer.Name = "PageContainer"; PageContainer.Size = UDim2.new(1, -130, 1, -80); PageContainer.Position = UDim2.new(0, 120, 0, 45); PageContainer.BackgroundTransparency = 1; PageContainer.Parent = MainFrame
 
 	local Lib = {Scripts = {}}
 	function Lib:AddScript(n, f) Lib.Scripts[n] = f end
 	function Lib:AddTab(conf)
-		local TabBtn = Instance.new("TextButton"); TabBtn.Size = UDim2.new(1, 0, 0, 30); TabBtn.Text = conf.Name; TabBtn.Parent = TabContainer; Instance.new("UICorner", TabBtn)
-		local Page = Instance.new("ScrollingFrame"); Page.Name = conf.Name; Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.Visible = false; Page.Parent = PageContainer; Page.AutomaticCanvasSize = "Y"; Page.ClipsDescendants = false
+		local TabBtn = Instance.new("TextButton"); TabBtn.Size = UDim2.new(1, 0, 0, 30); TabBtn.Text = conf.Name; TabBtn.BackgroundColor3 = Color3.fromRGB(45,45,45); TabBtn.TextColor3 = Color3.new(1,1,1); TabBtn.Parent = TabContainer; Instance.new("UICorner", TabBtn)
+		local Page = Instance.new("ScrollingFrame"); Page.Name = conf.Name; Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.Visible = false; Page.Parent = PageContainer; Page.AutomaticCanvasSize = "Y"; Page.ClipsDescendants = false; Page.ScrollBarThickness = 2
 		Instance.new("UIListLayout", Page).Padding = UDim.new(0, 5)
 		TabBtn.MouseButton1Click:Connect(function() for _, p in pairs(PageContainer:GetChildren()) do p.Visible = false end Page.Visible = true end)
 		local TabObj = {}
