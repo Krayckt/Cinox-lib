@@ -6,8 +6,8 @@ The Cinox Framework is a modular and mobile-friendly UI library for Roblox. It u
 To start the UI, you first need to load the framework and initialize it.
 Lua
 
-local Cinox = loadstring(game:HttpGet("YOUR_RAW_GITHUB_LINK"))()
-local Hub = Cinox.Init({Name = "My Script Hub"})
+local Cinox = loadstring(game:HttpGet("https://raw.githubusercontent.com/Krayckt/Cinox-lib/main/CinoxLib.beta.lua"))()
+local Hub = Cinox.Init({Name = "Cinox UI"})
 
 2. Creating Tabs
 
@@ -33,6 +33,7 @@ You can add the following interactive elements to any tab:
 --Lua´
 
 --´Load the Framework from GitHub´
+
 local Lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Krayckt/Cinox-lib/main/CinoxLib.beta.lua"))()
 
 --´ Initialize the Main Window´
