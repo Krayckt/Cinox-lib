@@ -4,7 +4,7 @@ local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- Utility: Dragging
+-- Utility: Dragging für PC & Mobile
 local function CreateDrag(gui, target)
     local dragging, dragStart, startPos
     gui.InputBegan:Connect(function(input)
@@ -21,91 +21,208 @@ local function CreateDrag(gui, target)
     end)
 end
 
+-- Utility: Color Picker Fenster (Wieder integriert!)
+local function OpenPicker(mainFrame, accent, callback)
+    if mainFrame:FindFirstChild("CP_Window") then mainFrame.CP_Window:Destroy() return end
+    local CP = Instance.new("Frame"); CP.Name = "CP_Window"; CP.Size = UDim2.new(0, 160, 0, 180); CP.Position = UDim2.new(1, 10, 0, 0); CP.BackgroundColor3 = Color3.fromRGB(25,25,25); CP.Parent = mainFrame; CP.ZIndex = 100
+    Instance.new("UICorner", CP); local s = Instance.new("UIStroke", CP); s.Color = accent; s.Thickness = 1.5
+    local Wheel = Instance.new("ImageButton"); Wheel.Size = UDim2.new(0, 130, 0, 130); Wheel.Position = UDim2.new(0.5, -65, 0, 10); Wheel.Image = "rbxassetid://7393858638"; Wheel.BackgroundTransparency = 1; Wheel.Parent = CP; Wheel.ZIndex = 101
+    local Pick = Instance.new("Frame"); Pick.Size = UDim2.new(0, 10, 0, 10); Pick.BackgroundColor3 = Color3.new(1,1,1); Pick.Parent = Wheel; Pick.ZIndex = 102; Instance.new("UICorner", Pick).CornerRadius = UDim.new(1,0)
+    local drag = false
+    local function up(i)
+        local rel = Vector2.new(i.Position.X, i.Position.Y) - (Wheel.AbsolutePosition + Wheel.AbsoluteSize/2)
+        local angle = math.atan2(rel.Y, rel.X); local dist = math.min(rel.Magnitude, 65)
+        Pick.Position = UDim2.new(0.5, math.cos(angle)*dist-5, 0.5, math.sin(angle)*dist-5)
+        callback(Color3.fromHSV(((math.deg(angle)+180)%360)/360, dist/65, 1))
+    end
+    Wheel.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then drag = true up(i) end end)
+    UserInputService.InputChanged:Connect(function(i) if drag and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then up(i) end end)
+    UserInputService.InputEnded:Connect(function() drag = false end)
+    local b = Instance.new("TextButton"); b.Size = UDim2.new(1,-20,0,25); b.Position = UDim2.new(0,10,1,-30); b.Text = "Fertig"; b.Parent = CP; b.MouseButton1Click:Connect(function() CP:Destroy() end)
+end
+
 function Cinox.Init(manifest)
-    local SG = Instance.new("ScreenGui"); SG.Name = manifest.Name; SG.Parent = LocalPlayer:WaitForChild("PlayerGui"); SG.ResetOnSpawn = false
-    local isMobile = UserInputService.TouchEnabled
+    local SG = Instance.new("ScreenGui"); SG.Name = manifest.Name; SG.Parent = LocalPlayer.PlayerGui; SG.ResetOnSpawn = false
+    local MF = Instance.new("Frame"); MF.Name = "MainFrame"; MF.Size = UDim2.new(0, 550, 0, 350); MF.Position = UDim2.new(0.5, -275, 0.5, -175); MF.BackgroundColor3 = Color3.fromRGB(30, 30, 30); MF.Parent = SG; MF.ClipsDescendants = true; Instance.new("UICorner", MF)
     
-    local MF = Instance.new("Frame"); MF.Name = "MainFrame"; MF.Parent = SG; MF.BackgroundColor3 = Color3.fromRGB(30, 30, 30); MF.BorderSizePixel = 0; MF.ClipsDescendants = true
-    MF.Size = UDim2.new(0, 550, 0, 350); MF.Position = UDim2.new(0.5, -275, 0.5, -175); Instance.new("UICorner", MF)
+    local TB = Instance.new("Frame"); TB.Size = UDim2.new(1, 0, 0, 35); TB.BackgroundColor3 = Color3.fromRGB(20, 20, 20); TB.Parent = MF; CreateDrag(TB, MF); Instance.new("UICorner", TB)
+    local Close = Instance.new("TextButton"); Close.Text = "X"; Close.Size = UDim2.new(0, 25, 0, 25); Close.Position = UDim2.new(1, -30, 0, 5); Close.BackgroundColor3 = Color3.fromRGB(200, 50, 50); Close.TextColor3 = Color3.new(1,1,1); Close.Parent = TB; Instance.new("UICorner", Close)
+    -- Minimize Button mit festem ZIndex
+    local Mini = Instance.new("TextButton"); Mini.Text = "-"; Mini.Size = UDim2.new(0, 25, 0, 25); Mini.Position = UDim2.new(1, -60, 0, 5); Mini.BackgroundColor3 = Color3.fromRGB(70, 70, 70); Mini.TextColor3 = Color3.new(1,1,1); Mini.Parent = TB; Mini.ZIndex = 10; Instance.new("UICorner", Mini)
     
-    -- TitleBar
-    local TB = Instance.new("Frame"); TB.Size = UDim2.new(1, 0, 0, 35); TB.BackgroundColor3 = Color3.fromRGB(20, 20, 20); TB.Parent = MF; TB.ZIndex = 5; CreateDrag(TB, MF); Instance.new("UICorner", TB)
-    
-    -- Title Text (Platz für Buttons lassen!)
-    local Txt = Instance.new("TextLabel"); Txt.Size = UDim2.new(1, -100, 1, 0); Txt.Position = UDim2.new(0, 10, 0, 0); Txt.Text = manifest.Name; Txt.TextColor3 = Color3.new(1,1,1); Txt.BackgroundTransparency = 1; Txt.TextXAlignment = "Left"; Txt.Parent = TB; Txt.ZIndex = 6
-    
-    -- Buttons (Explicit ZIndex & Order)
-    local Close = Instance.new("TextButton"); Close.Text = "X"; Close.Size = UDim2.new(0, 25, 0, 25); Close.Position = UDim2.new(1, -30, 0, 5); Close.BackgroundColor3 = Color3.fromRGB(200, 50, 50); Close.TextColor3 = Color3.new(1,1,1); Close.Parent = TB; Close.ZIndex = 7; Instance.new("UICorner", Close)
-    local Mini = Instance.new("TextButton"); Mini.Text = "-"; Mini.Size = UDim2.new(0, 25, 0, 25); Mini.Position = UDim2.new(1, -60, 0, 5); Mini.BackgroundColor3 = Color3.fromRGB(60, 60, 60); Mini.TextColor3 = Color3.new(1,1,1); Mini.Parent = TB; Mini.ZIndex = 7; Instance.new("UICorner", Mini)
+    local TabScroll = Instance.new("ScrollingFrame"); TabScroll.Size = UDim2.new(0, 115, 1, -45); TabScroll.Position = UDim2.new(0, 5, 0, 40); TabScroll.BackgroundTransparency = 1; TabScroll.Parent = MF; TabScroll.ScrollBarThickness = 0
+    Instance.new("UIListLayout", TabScroll).Padding = UDim.new(0, 5)
+    local PageHost = Instance.new("Frame"); PageHost.Size = UDim2.new(1, -135, 1, -45); PageHost.Position = UDim2.new(0, 125, 0, 40); PageHost.BackgroundTransparency = 1; PageHost.Parent = MF
 
-    local TabC = Instance.new("ScrollingFrame"); TabC.Size = UDim2.new(0, 110, 1, -50); TabC.Position = UDim2.new(0, 5, 0, 45); TabC.BackgroundTransparency = 1; TabC.Parent = MF; TabC.ScrollBarThickness = 0
-    Instance.new("UIListLayout", TabC).Padding = UDim.new(0, 5)
-    local PageC = Instance.new("Frame"); PageC.Size = UDim2.new(1, -130, 1, -50); PageC.Position = UDim2.new(0, 120, 0, 45); PageC.BackgroundTransparency = 1; PageC.Parent = MF
-
-    local isMin, fullS = false, MF.Size
+    local isMin, fullSize = false, MF.Size
     Mini.MouseButton1Click:Connect(function()
         isMin = not isMin
-        TabC.Visible = not isMin; PageC.Visible = not isMin
-        MF:TweenSize(isMin and UDim2.new(0, 550, 0, 35) or fullS, "Out", "Quad", 0.3, true)
+        MF:TweenSize(isMin and UDim2.new(0, 550, 0, 35) or fullSize, "Out", "Quad", 0.3, true)
     end)
     Close.MouseButton1Click:Connect(function() SG:Destroy() end)
 
     local Lib = {Scripts = {}}
-    function Lib:AddScript(n, f) Lib.Scripts[n] = f end
+    function Lib:AddScript(n, f) Lib.Scripts[n] = f endfunction Lib:AddTab(conf)
+        local TBtn = Instance.new("TextButton")
+        TBtn.Size = UDim2.new(1, 0, 0, 30)
+        TBtn.Text = conf.Name
+        TBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+        TBtn.TextColor3 = Color3.new(1, 1, 1)
+        TBtn.Parent = TabScroll
+        Instance.new("UICorner", TBtn)
 
-    function Lib:AddTab(conf)
-        local TBtn = Instance.new("TextButton"); TBtn.Size = UDim2.new(1, 0, 0, 30); TBtn.Text = conf.Name; TBtn.Parent = TabC; Instance.new("UICorner", TBtn)
-        local Page = Instance.new("ScrollingFrame"); Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.Visible = false; Page.Parent = PageC; Page.AutomaticCanvasSize = "Y"; Page.ScrollBarThickness = 2
+        local Page = Instance.new("ScrollingFrame")
+        Page.Size = UDim2.new(1, 0, 1, 0)
+        Page.BackgroundTransparency = 1
+        Page.Visible = false
+        Page.ScrollBarThickness = 2
+        Page.Parent = PageHost
+        Page.AutomaticCanvasSize = "Y"
         Instance.new("UIListLayout", Page).Padding = UDim.new(0, 5)
-        TBtn.MouseButton1Click:Connect(function() for _, v in pairs(PageC:GetChildren()) do v.Visible = false end Page.Visible = true end)
+
+        TBtn.MouseButton1Click:Connect(function()
+            for _, v in pairs(PageHost:GetChildren()) do v.Visible = false end
+            Page.Visible = true
+        end)
 
         local TabObj = {POMs = {}}
+
         function TabObj:AddTool(t)
             local target = Page
+            
+            -- POM System (Einklappbare Ordner)
             if t["Do.POM"] then
-                if not TabObj.POMs[t.PartOfMenu] then
-                    local pf = Instance.new("Frame"); pf.Size = UDim2.new(1, 0, 0, 30); pf.BackgroundColor3 = Color3.fromRGB(20, 20, 20); pf.Parent = Page; pf.ClipsDescendants = true; Instance.new("UICorner", pf)
-                    local pl = Instance.new("TextButton"); pl.Size = UDim2.new(1, 0, 0, 30); pl.Text = "[+] " .. t.PartOfMenu; pl.BackgroundTransparency = 1; pl.TextColor3 = Color3.new(1,1,1); pl.Parent = pf
-                    local pc = Instance.new("Frame"); pc.Size = UDim2.new(1, 0, 0, 0); pc.Position = UDim2.new(0, 0, 0, 30); pc.BackgroundTransparency = 1; pc.Parent = pf
-                    local ui = Instance.new("UIListLayout", pc); ui.Padding = UDim.new(0, 2)
-                    ui:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() pc.Size = UDim2.new(1, 0, 0, ui.AbsoluteContentSize.Y) end)
-                    local op = false
-                    pl.MouseButton1Click:Connect(function() op = not op; pf:TweenSize(op and UDim2.new(1, 0, 0, pc.Size.Y.Offset + 35) or UDim2.new(1, 0, 0, 30), "Out", "Quad", 0.3, true) end)
-                    TabObj.POMs[t.PartOfMenu] = pc
+                local menuName = t.PartOfMenu or "Allgemein"
+                if not TabObj.POMs[menuName] then
+                    local f = Instance.new("Frame")
+                    f.Size = UDim2.new(1, 0, 0, 30)
+                    f.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+                    f.ClipsDescendants = true
+                    f.Parent = Page
+                    Instance.new("UICorner", f)
+
+                    local l = Instance.new("TextButton")
+                    l.Size = UDim2.new(1, 0, 0, 30)
+                    l.Text = "[+] " .. menuName
+                    l.TextColor3 = Color3.new(1,1,1)
+                    l.BackgroundTransparency = 1
+                    l.Parent = f
+
+                    local c = Instance.new("Frame")
+                    c.Size = UDim2.new(1, 0, 0, 0)
+                    c.Position = UDim2.new(0, 0, 0, 30)
+                    c.BackgroundTransparency = 1
+                    c.Parent = f
+                    local ui = Instance.new("UIListLayout", c)
+                    ui.Padding = UDim.new(0, 2)
+                    
+                    ui:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                        c.Size = UDim2.new(1, 0, 0, ui.AbsoluteContentSize.Y)
+                    end)
+
+                    local open = false
+                    l.MouseButton1Click:Connect(function()
+                        open = not open
+                        l.Text = open and "[-] " .. menuName or "[+] " .. menuName
+                        f:TweenSize(open and UDim2.new(1, 0, 0, c.Size.Y.Offset + 35) or UDim2.new(1, 0, 0, 30), "Out", "Quad", 0.3, true)
+                    end)
+                    TabObj.POMs[menuName] = c
                 end
-                target = TabObj.POMs[t.PartOfMenu]
+                target = TabObj.POMs[menuName]
             end
 
-            local b = Instance.new("Frame"); b.Size = UDim2.new(1, 0, 0, 40); b.BackgroundColor3 = Color3.fromRGB(45, 45, 45); b.Parent = target; Instance.new("UICorner", b)
-            local l = Instance.new("TextLabel"); l.Text = "  " .. t.Name; l.Size = UDim2.new(0.4, 0, 1, 0); l.BackgroundTransparency = 1; l.TextColor3 = Color3.new(1,1,1); l.TextXAlignment = "Left"; l.Parent = b
+            local b = Instance.new("Frame")
+            b.Size = UDim2.new(1, 0, 0, 40)
+            b.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+            b.Parent = target
+            Instance.new("UICorner", b)
+
+            local lbl = Instance.new("TextLabel")
+            lbl.Text = "  " .. t.Name
+            lbl.Size = UDim2.new(0.4, 0, 1, 0)
+            lbl.TextColor3 = Color3.new(1, 1, 1)
+            lbl.BackgroundTransparency = 1
+            lbl.TextXAlignment = "Left"
+            lbl.Parent = b
 
             -- LOOK: TOGGLE
             if t.Look == "Toggle" then
-                local tgl = Instance.new("TextButton"); tgl.Size = UDim2.new(0, 35, 0, 18); tgl.Position = UDim2.new(1, -45, 0.5, -9); tgl.BackgroundColor3 = Color3.fromRGB(30, 30, 30); tgl.Text = ""; tgl.Parent = b; Instance.new("UICorner", tgl).CornerRadius = UDim.new(1,0)
-                local cir = Instance.new("Frame"); cir.Size = UDim2.new(0, 14, 0, 14); cir.Position = UDim2.new(0, 2, 0.5, -7); cir.BackgroundColor3 = Color3.new(1,1,1); cir.Parent = tgl; Instance.new("UICorner", cir).CornerRadius = UDim.new(1,0)
-                local s = false
+                local tgl = Instance.new("TextButton")
+                tgl.Size = UDim2.new(0, 35, 0, 18)
+                tgl.Position = UDim2.new(1, -45, 0.5, -9)
+                tgl.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+                tgl.Text = ""
+                tgl.Parent = b
+                Instance.new("UICorner", tgl).CornerRadius = UDim.new(1, 0)
+
+                local cir = Instance.new("Frame")
+                cir.Size = UDim2.new(0, 14, 0, 14)
+                cir.Position = UDim2.new(0, 2, 0.5, -7)
+                cir.BackgroundColor3 = Color3.new(1, 1, 1)
+                cir.Parent = tgl
+                Instance.new("UICorner", cir).CornerRadius = UDim.new(1, 0)
+
+                local state = false
                 tgl.MouseButton1Click:Connect(function()
-                    s = not s
-                    cir:TweenPosition(s and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7), "Out", "Quad", 0.2, true)
-                    tgl.BackgroundColor3 = s and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(30, 30, 30)
-                    if Lib.Scripts[t.Name] then Lib.Scripts[t.Name](s) end
+                    state = not state
+                    cir:TweenPosition(state and UDim2.new(1, -16, 0.5, -7) or UDim2.new(0, 2, 0.5, -7), "Out", "Quad", 0.2, true)
+                    tgl.BackgroundColor3 = state and Color3.fromRGB(0, 170, 255) or Color3.fromRGB(30, 30, 30)
+                    if Lib.Scripts[t.Name] then Lib.Scripts[t.Name](state) end
                 end)
 
-            -- LOOK: SLIDER
+            -- LOOK: SLIDER (Optimiert für Mobile & PC)
             elseif t.Look == "Slider" then
-                local sB = Instance.new("TextButton"); sB.Size = UDim2.new(0.4, 0, 0, 10); sB.Position = UDim2.new(0.45, 0, 0.5, -5); sB.BackgroundColor3 = Color3.fromRGB(25, 25, 25); sB.Text = ""; sB.Parent = b; Instance.new("UICorner", sB)
-                local sF = Instance.new("Frame"); sF.Size = UDim2.new(0, 0, 1, 0); sF.BackgroundColor3 = Color3.fromRGB(0, 170, 255); sF.Parent = sB; Instance.new("UICorner", sF)
-                local vL = Instance.new("TextLabel"); vL.Size = UDim2.new(0, 30, 1, 0); vL.Position = UDim2.new(1, 5, 0, 0); vL.Text = tostring(t.Min); vL.TextColor3 = Color3.new(1,1,1); vL.BackgroundTransparency = 1; vL.Parent = sB
-                local function up(input)
+                local sB = Instance.new("TextButton")
+                sB.Size = UDim2.new(0.4, 0, 0, 10)
+                sB.Position = UDim2.new(0.45, 0, 0.5, -5)
+                sB.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+                sB.Text = ""
+                sB.Parent = b
+                Instance.new("UICorner", sB)
+
+                local sF = Instance.new("Frame")
+                sF.Size = UDim2.new(0, 0, 1, 0)
+                sF.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+                sF.Parent = sB
+                Instance.new("UICorner", sF)
+
+                local vL = Instance.new("TextLabel")
+                vL.Size = UDim2.new(0, 30, 1, 0)
+                vL.Position = UDim2.new(1, 5, 0, 0)
+                vL.Text = tostring(t.Min)
+                vL.TextColor3 = Color3.new(1, 1, 1)
+                vL.BackgroundTransparency = 1
+                vL.Parent = sB
+
+                local function update(input)
                     local iPos = (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1) and input.Position.X or UserInputService:GetMouseLocation().X
                     local rel = math.clamp((iPos - sB.AbsolutePosition.X) / sB.AbsoluteSize.X, 0, 1)
-                    sF.Size = UDim2.new(rel, 0, 1, 0); local res = math.floor(t.Min + (rel * (t.Max - t.Min))); vL.Text = res
+                    sF.Size = UDim2.new(rel, 0, 1, 0)
+                    local res = math.floor(t.Min + (rel * (t.Max - t.Min)))
+                    vL.Text = tostring(res)
                     if Lib.Scripts[t.Name] then Lib.Scripts[t.Name](res) end
                 end
+
                 local active = false
-                sB.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then active = true up(i) end end)
-                UserInputService.InputChanged:Connect(function(i) if active and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then up(i) end end)
+                sB.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then active = true update(i) end end)
+                UserInputService.InputChanged:Connect(function(i) if active and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then update(i) end end)
                 UserInputService.InputEnded:Connect(function() active = false end)
+
+            -- LOOK: COLORPICK
+            elseif t.Look == "ColorPick" then
+                local cpB = Instance.new("TextButton")
+                cpB.Size = UDim2.new(0, 20, 0, 20)
+                cpB.Position = UDim2.new(1, -30, 0.5, -10)
+                cpB.Text = ""
+                cpB.Parent = b
+                Instance.new("UICorner", cpB)
+
+                cpB.MouseButton1Click:Connect(function()
+                    OpenPicker(MF, Color3.fromRGB(0, 170, 255), function(c)
+                        cpB.BackgroundColor3 = c
+                        if Lib.Scripts[t.Name] then Lib.Scripts[t.Name](c) end
+                    end)
+                end)
             end
         end
         return TabObj
