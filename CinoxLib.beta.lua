@@ -30,19 +30,12 @@ local function CreateColorPicker(parent, callback, isMobile, mainFrame)
 	
 	local CPFrame = Instance.new("Frame")
 	CPFrame.Name = "CP_Frame"
-	CPFrame.Size = isMobile and UDim2.new(0, 200, 0, 250) or UDim2.new(0, 170, 0, 170)
-	
-	-- Positionierung korrigiert: Erscheint jetzt IMMER rechts vom Main-Menü, damit nichts abgeschnitten wird
-	if isMobile then
-		CPFrame.Position = UDim2.new(0.5, -100, 0.5, -125)
-	else
-		CPFrame.Position = UDim2.new(1, 10, 0, 50)
-	end
-	
+	CPFrame.Size = isMobile and UDim2.new(0, 200, 0, 250) or UDim2.new(0, 170, 0, 185)
+	CPFrame.Position = isMobile and UDim2.new(0.5, -100, 0.5, -125) or UDim2.new(1, 10, 0, 50)
 	CPFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-	CPFrame.ZIndex = 500 -- Sehr hoch, damit es über allem liegt
+	CPFrame.ZIndex = 1000 -- Maximale Ebene für List-Mode Fix
 	CPFrame.Active = true
-	CPFrame.Parent = mainFrame -- Direkt ans Hauptfenster hängen
+	CPFrame.Parent = mainFrame
 	Instance.new("UICorner", CPFrame)
 	Instance.new("UIStroke", CPFrame).Color = Color3.fromRGB(100, 100, 100)
 
@@ -50,27 +43,29 @@ local function CreateColorPicker(parent, callback, isMobile, mainFrame)
 	Wheel.Name = "ColorWheel"
 	Wheel.Size = UDim2.new(0, 140, 0, 140)
 	Wheel.Position = UDim2.new(0.5, -70, 0, 10)
-	Wheel.Image = "rbxassetid://6020299385" 
+	-- DEINE NEUE ID:
+	Wheel.Image = "rbxassetid://7393858638" 
 	Wheel.BackgroundTransparency = 1
-	Wheel.ZIndex = 501
+	Wheel.ZIndex = 1001
 	Wheel.Parent = CPFrame
 	
 	local Picker = Instance.new("Frame")
 	Picker.Size = UDim2.new(0, 14, 0, 14)
 	Picker.BackgroundColor3 = Color3.new(1,1,1)
-	Picker.ZIndex = 502
+	Picker.ZIndex = 1002
 	Picker.Position = UDim2.new(0.5, -7, 0.5, -7)
 	Picker.Parent = Wheel
 	Instance.new("UICorner", Picker).CornerRadius = UDim.new(1,0)
-	Instance.new("UIStroke", Picker).Thickness = 2
+	local pStroke = Instance.new("UIStroke", Picker)
+	pStroke.Thickness = 2
 
 	local CloseBtn = Instance.new("TextButton")
-	CloseBtn.Size = UDim2.new(1, -20, 0, 35)
-	CloseBtn.Position = UDim2.new(0, 10, 1, -45)
-	CloseBtn.Text = "Schließen"
-	CloseBtn.Visible = not isMobile -- Auf PC auch ein Schließen-Button zur Sicherheit
-	if isMobile then CloseBtn.Visible = true end
-	CloseBtn.ZIndex = 501
+	CloseBtn.Size = UDim2.new(1, -20, 0, 30)
+	CloseBtn.Position = UDim2.new(0, 10, 1, -40)
+	CloseBtn.Text = "Fertig"
+	CloseBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+	CloseBtn.TextColor3 = Color3.new(1,1,1)
+	CloseBtn.ZIndex = 1001
 	CloseBtn.Parent = CPFrame
 	Instance.new("UICorner", CloseBtn)
 	CloseBtn.MouseButton1Click:Connect(function() CPFrame:Destroy() end)
@@ -97,12 +92,12 @@ function Cinox.Init(manifest)
 	MainFrame.Size = isMobile and UDim2.new(0, 450, 0, 280) or UDim2.new(0, 600, 0, 400)
 	MainFrame.Position = UDim2.new(0.5, -MainFrame.Size.X.Offset/2, 0.5, -MainFrame.Size.Y.Offset/2)
 	MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-	MainFrame.ClipsDescendants = false -- WICHTIG: Erlaubt dem Picker, über den Rand zu schauen
+	MainFrame.ClipsDescendants = false -- Verhindert Abschneiden im List-Mode
 	
 	local TitleBar = Instance.new("Frame"); TitleBar.Size = UDim2.new(1, 0, 0, 35); TitleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20); TitleBar.Parent = MainFrame; Instance.new("UICorner", TitleBar); CreateDrag(TitleBar, MainFrame)
 	local TitleText = Instance.new("TextLabel"); TitleText.Text = "  "..manifest.Name; TitleText.Size = UDim2.new(0.5, 0, 1, 0); TitleText.BackgroundTransparency = 1; TitleText.TextColor3 = Color3.new(1,1,1); TitleText.Font = Enum.Font.GothamBold; TitleText.TextXAlignment = "Left"; TitleText.Parent = TitleBar
 	
-	local TabContainer = Instance.new("ScrollingFrame"); TabContainer.Size = UDim2.new(0, 110, 1, -80); TabContainer.Position = UDim2.new(0, 5, 0, 45); TabContainer.BackgroundTransparency = 1; TabContainer.Parent = MainFrame; Instance.new("UIListLayout", TabContainer).Padding = UDim.new(0, 5)
+	local TabContainer = Instance.new("ScrollingFrame"); TabContainer.Size = UDim2.new(0, 110, 1, -80); TabContainer.Position = UDim2.new(0, 5, 0, 45); TabContainer.BackgroundTransparency = 1; TabContainer.Parent = MainFrame; Instance.new("UIListLayout", TabContainer).Padding = UDim.new(0, 5); TabContainer.ScrollBarThickness = 2
 	local PageContainer = Instance.new("Frame"); PageContainer.Size = UDim2.new(1, -130, 1, -80); PageContainer.Position = UDim2.new(0, 120, 0, 45); PageContainer.BackgroundTransparency = 1; PageContainer.Parent = MainFrame
 
 	local Lib = {Scripts = {}}
