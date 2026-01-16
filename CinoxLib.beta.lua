@@ -21,7 +21,7 @@ local function CreateDrag(gui, target)
     end)
 end
 
--- Utility: Color Picker Fenster (Wieder integriert!)
+-- Utility: Color Picker Fenster
 local function OpenPicker(mainFrame, accent, callback)
     if mainFrame:FindFirstChild("CP_Window") then mainFrame.CP_Window:Destroy() return end
     local CP = Instance.new("Frame"); CP.Name = "CP_Window"; CP.Size = UDim2.new(0, 160, 0, 180); CP.Position = UDim2.new(1, 10, 0, 0); CP.BackgroundColor3 = Color3.fromRGB(25,25,25); CP.Parent = mainFrame; CP.ZIndex = 100
@@ -47,7 +47,7 @@ function Cinox.Init(manifest)
     
     local TB = Instance.new("Frame"); TB.Size = UDim2.new(1, 0, 0, 35); TB.BackgroundColor3 = Color3.fromRGB(20, 20, 20); TB.Parent = MF; CreateDrag(TB, MF); Instance.new("UICorner", TB)
     local Close = Instance.new("TextButton"); Close.Text = "X"; Close.Size = UDim2.new(0, 25, 0, 25); Close.Position = UDim2.new(1, -30, 0, 5); Close.BackgroundColor3 = Color3.fromRGB(200, 50, 50); Close.TextColor3 = Color3.new(1,1,1); Close.Parent = TB; Instance.new("UICorner", Close)
-    -- Minimize Button mit festem ZIndex
+    
     local Mini = Instance.new("TextButton"); Mini.Text = "-"; Mini.Size = UDim2.new(0, 25, 0, 25); Mini.Position = UDim2.new(1, -60, 0, 5); Mini.BackgroundColor3 = Color3.fromRGB(70, 70, 70); Mini.TextColor3 = Color3.new(1,1,1); Mini.Parent = TB; Mini.ZIndex = 10; Instance.new("UICorner", Mini)
     
     local TabScroll = Instance.new("ScrollingFrame"); TabScroll.Size = UDim2.new(0, 115, 1, -45); TabScroll.Position = UDim2.new(0, 5, 0, 40); TabScroll.BackgroundTransparency = 1; TabScroll.Parent = MF; TabScroll.ScrollBarThickness = 0
@@ -62,7 +62,9 @@ function Cinox.Init(manifest)
     Close.MouseButton1Click:Connect(function() SG:Destroy() end)
 
     local Lib = {Scripts = {}}
-    function Lib:AddScript(n, f) Lib.Scripts[n] = f endfunction Lib:AddTab(conf)
+    function Lib:AddScript(n, f) Lib.Scripts[n] = f end
+
+    function Lib:AddTab(conf)
         local TBtn = Instance.new("TextButton")
         TBtn.Size = UDim2.new(1, 0, 0, 30)
         TBtn.Text = conf.Name
@@ -90,7 +92,6 @@ function Cinox.Init(manifest)
         function TabObj:AddTool(t)
             local target = Page
             
-            -- POM System (Einklappbare Ordner)
             if t["Do.POM"] then
                 local menuName = t.PartOfMenu or "Allgemein"
                 if not TabObj.POMs[menuName] then
@@ -145,7 +146,6 @@ function Cinox.Init(manifest)
             lbl.TextXAlignment = "Left"
             lbl.Parent = b
 
-            -- LOOK: TOGGLE
             if t.Look == "Toggle" then
                 local tgl = Instance.new("TextButton")
                 tgl.Size = UDim2.new(0, 35, 0, 18)
@@ -170,7 +170,6 @@ function Cinox.Init(manifest)
                     if Lib.Scripts[t.Name] then Lib.Scripts[t.Name](state) end
                 end)
 
-            -- LOOK: SLIDER (Optimiert für Mobile & PC)
             elseif t.Look == "Slider" then
                 local sB = Instance.new("TextButton")
                 sB.Size = UDim2.new(0.4, 0, 0, 10)
@@ -208,7 +207,6 @@ function Cinox.Init(manifest)
                 UserInputService.InputChanged:Connect(function(i) if active and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then update(i) end end)
                 UserInputService.InputEnded:Connect(function() active = false end)
 
-            -- LOOK: COLORPICK
             elseif t.Look == "ColorPick" then
                 local cpB = Instance.new("TextButton")
                 cpB.Size = UDim2.new(0, 20, 0, 20)
@@ -229,4 +227,5 @@ function Cinox.Init(manifest)
     end
     return Lib
 end
+
 return Cinox
