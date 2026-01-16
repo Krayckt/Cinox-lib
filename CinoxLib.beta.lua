@@ -43,8 +43,8 @@ local function CreateColorPicker(parent, callback, isMobile, mainFrame)
 	Wheel.Name = "ColorWheel"
 	Wheel.Size = UDim2.new(0, 140, 0, 140)
 	Wheel.Position = UDim2.new(0.5, -70, 0, 10)
-	-- FIX: Nutzt den direkten Asset-Endpoint für Decals
-	Wheel.Image = "https://www.roblox.com/asset-thumbnail/image?assetId=7393858638&width=420&height=420&format=png"
+	-- ID Fix: Nutzt rbxassetid für die Anzeige
+	Wheel.Image = "rbxassetid://7393858638" 
 	Wheel.BackgroundTransparency = 1
 	Wheel.ZIndex = 1001
 	Wheel.Parent = CPFrame
@@ -61,7 +61,7 @@ local function CreateColorPicker(parent, callback, isMobile, mainFrame)
 	local CloseBtn = Instance.new("TextButton")
 	CloseBtn.Size = UDim2.new(1, -20, 0, 30)
 	CloseBtn.Position = UDim2.new(0, 10, 1, -40)
-	CloseBtn.Text = "Fertig"
+	CloseBtn.Text = "Schließen"
 	CloseBtn.ZIndex = 1001
 	CloseBtn.Parent = CPFrame
 	Instance.new("UICorner", CloseBtn)
@@ -94,8 +94,24 @@ function Cinox.Init(manifest)
 	local TitleBar = Instance.new("Frame"); TitleBar.Size = UDim2.new(1, 0, 0, 35); TitleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20); TitleBar.Parent = MainFrame; Instance.new("UICorner", TitleBar); CreateDrag(TitleBar, MainFrame)
 	local TitleText = Instance.new("TextLabel"); TitleText.Text = "  "..manifest.Name; TitleText.Size = UDim2.new(0.5, 0, 1, 0); TitleText.BackgroundTransparency = 1; TitleText.TextColor3 = Color3.new(1,1,1); TitleText.Font = Enum.Font.GothamBold; TitleText.TextXAlignment = "Left"; TitleText.Parent = TitleBar
 	
-	local TabContainer = Instance.new("ScrollingFrame"); TabContainer.Size = UDim2.new(0, 110, 1, -80); TabContainer.Position = UDim2.new(0, 5, 0, 45); TabContainer.BackgroundTransparency = 1; TabContainer.Parent = MainFrame; Instance.new("UIListLayout", TabContainer).Padding = UDim.new(0, 5)
-	local PageContainer = Instance.new("Frame"); PageContainer.Size = UDim2.new(1, -130, 1, -80); PageContainer.Position = UDim2.new(0, 120, 0, 45); PageContainer.BackgroundTransparency = 1; PageContainer.Parent = MainFrame
+	-- HIER SIND DIE BUTTONS WIEDER:
+	local Buttons = Instance.new("Frame"); Buttons.Size = UDim2.new(0, 80, 1, 0); Buttons.Position = UDim2.new(1, -85, 0, 0); Buttons.BackgroundTransparency = 1; Buttons.Parent = TitleBar
+	local isMin, fullSize = false, MainFrame.Size
+	
+	local function mkBtn(t, c, p, cb)
+		local b = Instance.new("TextButton"); b.Text = t; b.BackgroundColor3 = c; b.Size = UDim2.new(0, 25, 0, 25); b.Position = p; b.TextColor3 = Color3.new(1,1,1); b.Parent = Buttons; Instance.new("UICorner", b); b.MouseButton1Click:Connect(cb)
+	end
+	
+	mkBtn("X", Color3.fromRGB(200,50,50), UDim2.new(1,-30,0,5), function() ScreenGui:Destroy() end)
+	mkBtn("-", Color3.fromRGB(60,60,60), UDim2.new(1,-60,0,5), function()
+		isMin = not isMin
+		MainFrame:FindFirstChild("TabContainer").Visible = not isMin
+		MainFrame:FindFirstChild("PageContainer").Visible = not isMin
+		TweenService:Create(MainFrame, TweenInfo.new(0.3), {Size = isMin and UDim2.new(0, 200, 0, 35) or fullSize}):Play()
+	end)
+
+	local TabContainer = Instance.new("ScrollingFrame"); TabContainer.Name = "TabContainer"; TabContainer.Size = UDim2.new(0, 110, 1, -80); TabContainer.Position = UDim2.new(0, 5, 0, 45); TabContainer.BackgroundTransparency = 1; TabContainer.Parent = MainFrame; Instance.new("UIListLayout", TabContainer).Padding = UDim.new(0, 5)
+	local PageContainer = Instance.new("Frame"); PageContainer.Name = "PageContainer"; PageContainer.Size = UDim2.new(1, -130, 1, -80); PageContainer.Position = UDim2.new(0, 120, 0, 45); PageContainer.BackgroundTransparency = 1; PageContainer.Parent = MainFrame
 
 	local Lib = {Scripts = {}}
 	function Lib:AddScript(n, f) Lib.Scripts[n] = f end
