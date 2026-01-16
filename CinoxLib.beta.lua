@@ -13,6 +13,7 @@ end
 
 local function CreateDrag(gui, target)
 	local dragging, dragInput, dragStart, startPos
+	gui.Active = true
 	gui.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
@@ -57,6 +58,7 @@ function Cinox.Init(manifest)
 	
 	local isMobile = UserInputService.TouchEnabled
 	local MainFrame = Instance.new("Frame")
+	MainFrame.Active = true
 	MainFrame.Size = isMobile and UDim2.new(0, 450, 0, 280) or UDim2.new(0, 600, 0, 400)
 	MainFrame.Position = UDim2.new(0.5, -225, 0.5, -140)
 	MainFrame.ClipsDescendants = true
@@ -71,6 +73,7 @@ function Cinox.Init(manifest)
 	MainFrame.BackgroundColor3 = bgColor
 
 	local TitleBar = Instance.new("Frame")
+	TitleBar.Active = true
 	TitleBar.Size = UDim2.new(1, 0, 0, 35)
 	TitleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 	TitleBar.Parent = MainFrame
@@ -87,10 +90,12 @@ function Cinox.Init(manifest)
 	Buttons.Size = UDim2.new(0, 80, 1, 0); Buttons.Position = UDim2.new(1, -85, 0, 0); Buttons.BackgroundTransparency = 1; Buttons.Parent = TitleBar
 	
 	local TabContainer = Instance.new("ScrollingFrame")
+	TabContainer.Active = true
 	TabContainer.Size = UDim2.new(0, 110, 1, -80); TabContainer.Position = UDim2.new(0, 5, 0, 45); TabContainer.BackgroundTransparency = 1; TabContainer.ScrollBarThickness = 0; TabContainer.Parent = MainFrame
 	Instance.new("UIListLayout", TabContainer).Padding = UDim.new(0, 5)
 
 	local PageContainer = Instance.new("Frame")
+	PageContainer.Active = true
 	PageContainer.Size = UDim2.new(1, -130, 1, -80); PageContainer.Position = UDim2.new(0, 120, 0, 45); PageContainer.BackgroundTransparency = 1; PageContainer.Parent = MainFrame
 
 	local UserInfo = Instance.new("TextLabel")
@@ -104,6 +109,7 @@ function Cinox.Init(manifest)
 	local fullSize = MainFrame.Size
 	local function mkBtn(txt, col, pos, cb)
 		local b = Instance.new("TextButton")
+		b.Active = true
 		b.Text = txt; b.BackgroundColor3 = col; b.Size = UDim2.new(0, 25, 0, 25); b.Position = pos; b.TextColor3 = Color3.new(1,1,1); b.Parent = Buttons; Instance.new("UICorner", b)
 		b.MouseButton1Click:Connect(cb)
 	end
@@ -125,8 +131,10 @@ function Cinox.Init(manifest)
 	function Lib:AddScript(name, func) Lib.Scripts[name] = func end
 	function Lib:AddTab(config)
 		local TabBtn = Instance.new("TextButton")
+		TabBtn.Active = true
 		TabBtn.Size = UDim2.new(1, 0, 0, 30); TabBtn.Text = config.Name; TabBtn.BackgroundColor3 = Color3.fromRGB(45,45,45); TabBtn.TextColor3 = (config.Name_Color == "Rainbow") and Color3.new(1,1,1) or config.Name_Color or Color3.new(1,1,1); TabBtn.Parent = TabContainer; Instance.new("UICorner", TabBtn)
 		local Page = Instance.new("ScrollingFrame")
+		Page.Active = true
 		Page.Name = config.Name; Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.Visible = false; Page.Parent = PageContainer; Page.ScrollBarThickness = 2
 		local layoutType = string.split(manifest.LAYOUT, "+")[1]
 		if layoutType == "TABEL" then
@@ -139,6 +147,7 @@ function Cinox.Init(manifest)
 		local TabObj = {}
 		function TabObj:AddPOM(name)
 			local POMFrame = Instance.new("Frame")
+			POMFrame.Active = true
 			POMFrame.Name = name; POMFrame.Size = UDim2.new(1, 0, 0, 0); POMFrame.AutomaticSize = "Y"; POMFrame.BackgroundColor3 = Color3.fromRGB(30,30,30); POMFrame.Parent = Page; Instance.new("UICorner", POMFrame)
 			local Label = Instance.new("TextLabel"); Label.Text = name; Label.Size = UDim2.new(1,0,0,20); Label.BackgroundTransparency=1; Label.TextColor3=Color3.new(1,1,1); Label.Parent=POMFrame
 			local Content = Instance.new("Frame"); Content.Name = "Content"; Content.Size = UDim2.new(1, -10, 0, 0); Content.Position = UDim2.new(0,5,0,25); Content.AutomaticSize = "Y"; Content.BackgroundTransparency = 1; Content.Parent = POMFrame; Instance.new("UIListLayout", Content).Padding = UDim.new(0,2)
@@ -147,6 +156,7 @@ function Cinox.Init(manifest)
 		function TabObj:AddTool(tool)
 			local Parent = (tool["Do.POM"] and tool.PartOfMenu and Lib.POMs[tool.PartOfMenu]) or Page
 			local Btn = Instance.new("TextButton")
+			Btn.Active = true
 			Btn.Size = (Parent == Page and layoutType == "TABEL") and (isMobile and UDim2.new(0, 100, 0, 100) or UDim2.new(0, 130, 0, 130)) or UDim2.new(1, 0, 0, 30)
 			Btn.Text = tool.Name; Btn.BackgroundColor3 = Color3.fromRGB(50,50,50); Btn.TextColor3 = Color3.new(1,1,1); Btn.Parent = Parent; Instance.new("UICorner", Btn)
 			Btn.MouseButton1Click:Connect(function() if Lib.Scripts[tool.Name] then Lib.Scripts[tool.Name]() end end)
