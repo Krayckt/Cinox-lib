@@ -41,7 +41,7 @@ local function CreateColorPicker(parent, callback, mainFrame)
 	local Wheel = Instance.new("ImageButton")
 	Wheel.Size = UDim2.new(0, 150, 0, 150)
 	Wheel.Position = UDim2.new(0.5, -75, 0, 10)
-	Wheel.Image = "rbxassetid://7393858225" -- Deine Texture ID
+	Wheel.Image = "rbxassetid://7393858225" 
 	Wheel.BackgroundTransparency = 1
 	Wheel.ZIndex = 5001
 	Wheel.Parent = CPFrame
@@ -59,10 +59,9 @@ local function CreateColorPicker(parent, callback, mainFrame)
 		local vec = Vector2.new(input.Position.X, input.Position.Y) - center
 		local angle = math.atan2(vec.Y, vec.X)
 		local radius = math.min(vec.Magnitude, Wheel.AbsoluteSize.X / 2)
-		
 		Picker.Position = UDim2.new(0.5, math.cos(angle) * radius - 5, 0.5, math.sin(angle) * radius - 5)
 		
-		-- FIX: Ausgleich der -45 Grad Drehung des Bildes
+		-- FIX: Ausgleich der Drehung
 		local deg = math.deg(angle) + 180 + 45 
 		local hue = (deg % 360) / 360
 		callback(Color3.fromHSV(hue, radius / (Wheel.AbsoluteSize.X / 2), 1))
@@ -73,36 +72,43 @@ local function CreateColorPicker(parent, callback, mainFrame)
 	UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then drag = false end end)
 	
 	local Close = Instance.new("TextButton")
-	Close.Size = UDim2.new(1, -20, 0, 30); Close.Position = UDim2.new(0, 10, 1, -35); Close.Text = "Übernehmen"; Close.Parent = CPFrame
-	Instance.new("UICorner", Close)
+	Close.Size = UDim2.new(1, -20, 0, 30); Close.Position = UDim2.new(0, 10, 1, -35); Close.Text = "OK"; Close.Parent = CPFrame; Instance.new("UICorner", Close)
 	Close.MouseButton1Click:Connect(function() CPFrame:Destroy() end)
 end
 
 function Cinox.Init(manifest)
-	local ScreenGui = Instance.new("ScreenGui"); ScreenGui.Name = manifest.Name; ScreenGui.Parent = LocalPlayer.PlayerGui
+	local ScreenGui = Instance.new("ScreenGui"); ScreenGui.Name = manifest.Name; ScreenGui.Parent = LocalPlayer.PlayerGui; ScreenGui.ResetOnSpawn = false
 	
 	local MainFrame = Instance.new("Frame"); MainFrame.Name = "MainFrame"; MainFrame.Parent = ScreenGui
 	MainFrame.Size = UDim2.new(0, 580, 0, 380)
 	MainFrame.Position = UDim2.new(0.5, -290, 0.5, -190)
 	MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	MainFrame.ClipsDescendants = false
 	Instance.new("UICorner", MainFrame)
 
-	local TitleBar = Instance.new("Frame"); TitleBar.Size = UDim2.new(1, 0, 0, 35); TitleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20); TitleBar.Parent = MainFrame; Instance.new("UICorner", TitleBar); CreateDrag(TitleBar, MainFrame)
-	
-	local CloseBtn = Instance.new("TextButton"); CloseBtn.Text = "X"; CloseBtn.Size = UDim2.new(0, 25, 0, 25); CloseBtn.Position = UDim2.new(1, -30, 0, 5); CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50); CloseBtn.TextColor3 = Color3.new(1,1,1); CloseBtn.ZIndex = 100; CloseBtn.Parent = TitleBar; CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
+	local TitleBar = Instance.new("Frame"); TitleBar.Name = "TitleBar"; TitleBar.Size = UDim2.new(1, 0, 0, 35); TitleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20); TitleBar.Parent = MainFrame; Instance.new("UICorner", TitleBar); CreateDrag(TitleBar, MainFrame)
+	TitleBar.ZIndex = 10
+
+	-- BUTTONS (X und -)
+	local CloseBtn = Instance.new("TextButton"); CloseBtn.Text = "X"; CloseBtn.Size = UDim2.new(0, 25, 0, 25); CloseBtn.Position = UDim2.new(1, -30, 0, 5); CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50); CloseBtn.TextColor3 = Color3.new(1,1,1); CloseBtn.ZIndex = 15; CloseBtn.Parent = TitleBar; Instance.new("UICorner", CloseBtn)
+	local MinBtn = Instance.new("TextButton"); MinBtn.Text = "-"; MinBtn.Size = UDim2.new(0, 25, 0, 25); MinBtn.Position = UDim2.new(1, -60, 0, 5); MinBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60); MinBtn.TextColor3 = Color3.new(1,1,1); MinBtn.ZIndex = 15; MinBtn.Parent = TitleBar; Instance.new("UICorner", MinBtn)
+
+	local TabContainer = Instance.new("ScrollingFrame")
+	TabContainer.Name = "TabContainer"
+	TabContainer.Size = UDim2.new(0, 120, 1, -45); TabContainer.Position = UDim2.new(0, 5, 0, 40); TabContainer.BackgroundTransparency = 1; TabContainer.ScrollBarThickness = 0; TabContainer.Parent = MainFrame
+	Instance.new("UIListLayout", TabContainer).Padding = UDim.new(0, 5)
 
 	local PageContainer = Instance.new("Frame")
 	PageContainer.Name = "PageContainer"
-	PageContainer.Size = UDim2.new(1, -145, 1, -50)
-	PageContainer.Position = UDim2.new(0, 135, 0, 40)
-	PageContainer.BackgroundTransparency = 1
-	PageContainer.ClipsDescendants = true 
-	PageContainer.Parent = MainFrame
+	PageContainer.Size = UDim2.new(1, -145, 1, -50); PageContainer.Position = UDim2.new(0, 135, 0, 40); PageContainer.BackgroundTransparency = 1; PageContainer.ClipsDescendants = true; PageContainer.Parent = MainFrame
 
-	local TabContainer = Instance.new("ScrollingFrame")
-	TabContainer.Size = UDim2.new(0, 120, 1, -45); TabContainer.Position = UDim2.new(0, 5, 0, 40); TabContainer.BackgroundTransparency = 1; TabContainer.ScrollBarThickness = 0; TabContainer.Parent = MainFrame
-	Instance.new("UIListLayout", TabContainer).Padding = UDim.new(0, 5)
+	local isMin, fullSize = false, MainFrame.Size
+	CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
+	MinBtn.MouseButton1Click:Connect(function()
+		isMin = not isMin
+		TabContainer.Visible = not isMin
+		PageContainer.Visible = not isMin
+		TweenService:Create(MainFrame, TweenInfo.new(0.3), {Size = isMin and UDim2.new(0, 200, 0, 35) or fullSize}):Play()
+	end)
 
 	local Lib = {Scripts = {}}
 	function Lib:AddScript(n, f) Lib.Scripts[n] = f end
@@ -111,14 +117,8 @@ function Cinox.Init(manifest)
 		local TabBtn = Instance.new("TextButton"); TabBtn.Size = UDim2.new(1, 0, 0, 30); TabBtn.Text = conf.Name; TabBtn.Parent = TabContainer; Instance.new("UICorner", TabBtn)
 		
 		local Page = Instance.new("ScrollingFrame")
-		Page.Size = UDim2.new(1, 0, 1, 0)
-		Page.BackgroundTransparency = 1
-		Page.Visible = false
-		Page.ScrollBarThickness = 4
-		Page.ScrollBarImageColor3 = Color3.fromRGB(80,80,80)
-		Page.AutomaticCanvasSize = Enum.AutomaticCanvasSize.Y
-		Page.CanvasSize = UDim2.new(0, 0, 0, 0)
-		Page.Parent = PageContainer
+		Page.Name = conf.Name
+		Page.Size = UDim2.new(1, 0, 1, 0); Page.BackgroundTransparency = 1; Page.Visible = false; Page.ScrollBarThickness = 4; Page.AutomaticCanvasSize = Enum.AutomaticCanvasSize.Y; Page.CanvasSize = UDim2.new(0, 0, 0, 0); Page.Parent = PageContainer
 		
 		local PageList = Instance.new("UIListLayout", Page); PageList.Padding = UDim.new(0, 8); PageList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 		Instance.new("UIPadding", Page).PaddingTop = UDim.new(0, 5)
@@ -131,19 +131,11 @@ function Cinox.Init(manifest)
 		local TabObj = {}
 		function TabObj:AddTool(t)
 			local b = Instance.new("TextButton")
-			-- Feste Breite innerhalb des Scrollframes, damit nichts übersteht
-			b.Size = UDim2.new(0, 410, 0, 40) 
-			b.Text = "  " .. t.Name; b.BackgroundColor3 = Color3.fromRGB(45, 45, 45); b.TextColor3 = Color3.new(1, 1, 1); b.TextXAlignment = Enum.TextXAlignment.Left; b.Parent = Page
-			Instance.new("UICorner", b)
+			b.Size = UDim2.new(0, 410, 0, 40); b.Text = "  " .. t.Name; b.BackgroundColor3 = Color3.fromRGB(45, 45, 45); b.TextColor3 = Color3.new(1, 1, 1); b.TextXAlignment = Enum.TextXAlignment.Left; b.Parent = Page; Instance.new("UICorner", b)
 
 			if t.Look == "ColorPick" then
 				local ind = Instance.new("Frame"); ind.Size = UDim2.new(0, 20, 0, 20); ind.Position = UDim2.new(1, -30, 0.5, -10); ind.BackgroundColor3 = Color3.new(1,1,1); ind.Parent = b; Instance.new("UICorner", ind)
-				b.MouseButton1Click:Connect(function()
-					CreateColorPicker(b, function(c) 
-						ind.BackgroundColor3 = c 
-						if Lib.Scripts[t.Name] then Lib.Scripts[t.Name](c) end 
-					end, MainFrame)
-				end)
+				b.MouseButton1Click:Connect(function() CreateColorPicker(b, function(c) ind.BackgroundColor3 = c if Lib.Scripts[t.Name] then Lib.Scripts[t.Name](c) end end, MainFrame) end)
 			elseif t.Look == "Toggle" then
 				local state = false
 				local tgl = Instance.new("Frame"); tgl.Size = UDim2.new(0, 34, 0, 18); tgl.Position = UDim2.new(1, -44, 0.5, -9); tgl.BackgroundColor3 = Color3.fromRGB(20,20,20); tgl.Parent = b; Instance.new("UICorner", tgl).CornerRadius = UDim.new(1,0)
