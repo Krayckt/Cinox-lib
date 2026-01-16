@@ -33,7 +33,7 @@ local function CreateColorPicker(parent, callback, isMobile, mainFrame)
 	CPFrame.Size = isMobile and UDim2.new(0, 200, 0, 250) or UDim2.new(0, 170, 0, 185)
 	CPFrame.Position = isMobile and UDim2.new(0.5, -100, 0.5, -125) or UDim2.new(1, 10, 0, 50)
 	CPFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-	CPFrame.ZIndex = 1000
+	CPFrame.ZIndex = 2000
 	CPFrame.Active = true
 	CPFrame.Parent = mainFrame
 	Instance.new("UICorner", CPFrame)
@@ -43,16 +43,16 @@ local function CreateColorPicker(parent, callback, isMobile, mainFrame)
 	Wheel.Name = "ColorWheel"
 	Wheel.Size = UDim2.new(0, 140, 0, 140)
 	Wheel.Position = UDim2.new(0.5, -70, 0, 10)
-	-- ID Fix: Nutzt rbxassetid für die Anzeige
+	-- Erzwingt das Laden der Image-ID
 	Wheel.Image = "rbxassetid://7393858638" 
 	Wheel.BackgroundTransparency = 1
-	Wheel.ZIndex = 1001
+	Wheel.ZIndex = 2001
 	Wheel.Parent = CPFrame
 	
 	local Picker = Instance.new("Frame")
 	Picker.Size = UDim2.new(0, 14, 0, 14)
 	Picker.BackgroundColor3 = Color3.new(1,1,1)
-	Picker.ZIndex = 1002
+	Picker.ZIndex = 2002
 	Picker.Position = UDim2.new(0.5, -7, 0.5, -7)
 	Picker.Parent = Wheel
 	Instance.new("UICorner", Picker).CornerRadius = UDim.new(1,0)
@@ -61,8 +61,8 @@ local function CreateColorPicker(parent, callback, isMobile, mainFrame)
 	local CloseBtn = Instance.new("TextButton")
 	CloseBtn.Size = UDim2.new(1, -20, 0, 30)
 	CloseBtn.Position = UDim2.new(0, 10, 1, -40)
-	CloseBtn.Text = "Schließen"
-	CloseBtn.ZIndex = 1001
+	CloseBtn.Text = "Fertig"
+	CloseBtn.ZIndex = 2001
 	CloseBtn.Parent = CPFrame
 	Instance.new("UICorner", CloseBtn)
 	CloseBtn.MouseButton1Click:Connect(function() CPFrame:Destroy() end)
@@ -85,25 +85,23 @@ end
 function Cinox.Init(manifest)
 	local ScreenGui = Instance.new("ScreenGui"); ScreenGui.Name = manifest.Name; ScreenGui.ResetOnSpawn = false; ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 	local isMobile = UserInputService.TouchEnabled
-	local MainFrame = Instance.new("Frame"); MainFrame.Active = true; MainFrame.Parent = ScreenGui; Instance.new("UICorner", MainFrame)
+	
+	local MainFrame = Instance.new("Frame"); MainFrame.Name = "MainFrame"; MainFrame.Active = true; MainFrame.Parent = ScreenGui; Instance.new("UICorner", MainFrame)
 	MainFrame.Size = isMobile and UDim2.new(0, 450, 0, 280) or UDim2.new(0, 600, 0, 400)
 	MainFrame.Position = UDim2.new(0.5, -MainFrame.Size.X.Offset/2, 0.5, -MainFrame.Size.Y.Offset/2)
 	MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 	MainFrame.ClipsDescendants = false 
 	
-	local TitleBar = Instance.new("Frame"); TitleBar.Size = UDim2.new(1, 0, 0, 35); TitleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20); TitleBar.Parent = MainFrame; Instance.new("UICorner", TitleBar); CreateDrag(TitleBar, MainFrame)
-	local TitleText = Instance.new("TextLabel"); TitleText.Text = "  "..manifest.Name; TitleText.Size = UDim2.new(0.5, 0, 1, 0); TitleText.BackgroundTransparency = 1; TitleText.TextColor3 = Color3.new(1,1,1); TitleText.Font = Enum.Font.GothamBold; TitleText.TextXAlignment = "Left"; TitleText.Parent = TitleBar
+	local TitleBar = Instance.new("Frame"); TitleBar.Name = "TitleBar"; TitleBar.Size = UDim2.new(1, 0, 0, 35); TitleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20); TitleBar.Parent = MainFrame; Instance.new("UICorner", TitleBar); CreateDrag(TitleBar, MainFrame)
+	local TitleText = Instance.new("TextLabel"); TitleText.Text = "  "..manifest.Name; TitleText.Size = UDim2.new(0.6, 0, 1, 0); TitleText.BackgroundTransparency = 1; TitleText.TextColor3 = Color3.new(1,1,1); TitleText.Font = Enum.Font.GothamBold; TitleText.TextXAlignment = "Left"; TitleText.Parent = TitleBar
 	
-	-- HIER SIND DIE BUTTONS WIEDER:
-	local Buttons = Instance.new("Frame"); Buttons.Size = UDim2.new(0, 80, 1, 0); Buttons.Position = UDim2.new(1, -85, 0, 0); Buttons.BackgroundTransparency = 1; Buttons.Parent = TitleBar
+	-- FIX: Direkte Erstellung der Buttons in der TitleBar
+	local CloseBtn = Instance.new("TextButton"); CloseBtn.Name = "Close"; CloseBtn.Text = "X"; CloseBtn.Size = UDim2.new(0, 25, 0, 25); CloseBtn.Position = UDim2.new(1, -30, 0, 5); CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50); CloseBtn.TextColor3 = Color3.new(1,1,1); CloseBtn.Parent = TitleBar; Instance.new("UICorner", CloseBtn)
+	local MinBtn = Instance.new("TextButton"); MinBtn.Name = "Minimize"; MinBtn.Text = "-"; MinBtn.Size = UDim2.new(0, 25, 0, 25); MinBtn.Position = UDim2.new(1, -60, 0, 5); MinBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60); MinBtn.TextColor3 = Color3.new(1,1,1); MinBtn.Parent = TitleBar; Instance.new("UICorner", MinBtn)
+	
 	local isMin, fullSize = false, MainFrame.Size
-	
-	local function mkBtn(t, c, p, cb)
-		local b = Instance.new("TextButton"); b.Text = t; b.BackgroundColor3 = c; b.Size = UDim2.new(0, 25, 0, 25); b.Position = p; b.TextColor3 = Color3.new(1,1,1); b.Parent = Buttons; Instance.new("UICorner", b); b.MouseButton1Click:Connect(cb)
-	end
-	
-	mkBtn("X", Color3.fromRGB(200,50,50), UDim2.new(1,-30,0,5), function() ScreenGui:Destroy() end)
-	mkBtn("-", Color3.fromRGB(60,60,60), UDim2.new(1,-60,0,5), function()
+	CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
+	MinBtn.MouseButton1Click:Connect(function()
 		isMin = not isMin
 		MainFrame:FindFirstChild("TabContainer").Visible = not isMin
 		MainFrame:FindFirstChild("PageContainer").Visible = not isMin
