@@ -44,19 +44,23 @@ end
 local function CreateColorPicker(parent, callback)
 	if parent:FindFirstChild("CP_Frame") then parent.CP_Frame.Visible = not parent.CP_Frame.Visible return end
 	local CPFrame = Instance.new("Frame")
-	CPFrame.Name = "CP_Frame"; CPFrame.Size = UDim2.new(0, 120, 0, 120); CPFrame.Position = UDim2.new(1, 10, 0, 0)
-	CPFrame.BackgroundColor3 = Color3.fromRGB(40,40,40); CPFrame.ZIndex = 10; CPFrame.Parent = parent; Instance.new("UICorner", CPFrame)
+	CPFrame.Name = "CP_Frame"; CPFrame.Size = UDim2.new(0, 150, 0, 150); CPFrame.Position = UDim2.new(1, 10, 0, 0)
+	CPFrame.BackgroundColor3 = Color3.fromRGB(30,30,30); CPFrame.ZIndex = 20; CPFrame.Parent = parent; Instance.new("UICorner", CPFrame)
 	local Wheel = Instance.new("ImageButton")
-	Wheel.Size = UDim2.new(0, 100, 0, 100); Wheel.Position = UDim2.new(0, 10, 0, 10); Wheel.Image = "rbxassetid://6020299385"; Wheel.BackgroundTransparency = 1; Wheel.Parent = CPFrame
+	Wheel.Size = UDim2.new(0, 130, 0, 130); Wheel.Position = UDim2.new(0, 10, 0, 10); Wheel.Image = "rbxassetid://6020299385"; Wheel.BackgroundTransparency = 1; Wheel.ZIndex = 21; Wheel.Parent = CPFrame
 	local Picker = Instance.new("Frame")
-	Picker.Size = UDim2.new(0, 6, 0, 6); Picker.BackgroundColor3 = Color3.new(1,1,1); Picker.Parent = Wheel; Instance.new("UICorner", Picker).CornerRadius = UDim.new(1,0)
+	Picker.Size = UDim2.new(0, 10, 0, 10); Picker.BackgroundColor3 = Color3.new(1,1,1); Picker.ZIndex = 22; Picker.Parent = Wheel; Instance.new("UICorner", Picker).CornerRadius = UDim.new(1,0)
+	local stroke = Instance.new("UIStroke", Picker); stroke.Thickness = 2; stroke.Color = Color3.new(0,0,0)
 	local drag = false
 	local function up(input)
-		local vec = Vector2.new(input.Position.X, input.Position.Y) - (Wheel.AbsolutePosition + (Wheel.AbsoluteSize/2))
+		local center = Wheel.AbsolutePosition + (Wheel.AbsoluteSize/2)
+		local vec = Vector2.new(input.Position.X, input.Position.Y) - center
 		local ang = math.atan2(vec.Y, vec.X)
 		local rad = math.min(vec.Magnitude, Wheel.AbsoluteSize.X/2)
-		Picker.Position = UDim2.new(0.5, math.cos(ang)*rad - 3, 0.5, math.sin(ang)*rad - 3)
-		callback(Color3.fromHSV((math.pi-ang)/(2*math.pi), rad/(Wheel.AbsoluteSize.X/2), 1))
+		Picker.Position = UDim2.new(0.5, math.cos(ang)*rad - 5, 0.5, math.sin(ang)*rad - 5)
+		local hue = (math.pi - ang) / (2 * math.pi)
+		local sat = rad / (Wheel.AbsoluteSize.X/2)
+		callback(Color3.fromHSV(hue, sat, 1))
 	end
 	Wheel.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then drag = true up(i) end end)
 	UserInputService.InputChanged:Connect(function(i) if drag and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then up(i) end end)
@@ -74,7 +78,7 @@ function Cinox.Init(manifest)
 	if manifest.For_Device and not CheckDevice(manifest.For_Device) then return end
 	local ScreenGui = Instance.new("ScreenGui"); ScreenGui.Name = manifest.Name; ScreenGui.ResetOnSpawn = false; ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 	local isMobile = UserInputService.TouchEnabled
-	local MainFrame = Instance.new("Frame"); MainFrame.Active = true; MainFrame.ClipsDescendants = true; MainFrame.Parent = ScreenGui; Instance.new("UICorner", MainFrame)
+	local MainFrame = Instance.new("Frame"); MainFrame.Active = true; MainFrame.ClipsDescendants = false; MainFrame.Parent = ScreenGui; Instance.new("UICorner", MainFrame)
 	MainFrame.Size = isMobile and UDim2.new(0, 450, 0, 280) or UDim2.new(0, 600, 0, 400)
 	MainFrame.Position = UDim2.new(0.5, -MainFrame.Size.X.Offset/2, 0.5, -MainFrame.Size.Y.Offset/2)
 	local bgColor = Color3.fromRGB(35, 35, 35)
