@@ -42,31 +42,59 @@ local function CreateDrag(gui, target)
 end
 
 local function CreateColorPicker(parent, callback)
-	if parent:FindFirstChild("CP_Frame") then parent.CP_Frame.Visible = not parent.CP_Frame.Visible return end
+	if parent:FindFirstChild("CP_Frame") then parent.CP_Frame:Destroy() return end
+	
 	local CPFrame = Instance.new("Frame")
-	CPFrame.Name = "CP_Frame"; CPFrame.Size = UDim2.new(0, 150, 0, 150); CPFrame.Position = UDim2.new(1, 10, 0, 0)
-	CPFrame.BackgroundColor3 = Color3.fromRGB(30,30,30); CPFrame.ZIndex = 20; CPFrame.Parent = parent; Instance.new("UICorner", CPFrame)
+	CPFrame.Name = "CP_Frame"; CPFrame.Size = UDim2.new(0, 160, 0, 160); CPFrame.Position = UDim2.new(1, 10, 0, 0)
+	CPFrame.BackgroundColor3 = Color3.fromRGB(30,30,30); CPFrame.ZIndex = 50; CPFrame.Parent = parent; Instance.new("UICorner", CPFrame)
+	Instance.new("UIStroke", CPFrame).Color = Color3.fromRGB(60,60,60)
+	
 	local Wheel = Instance.new("ImageButton")
-	Wheel.Size = UDim2.new(0, 130, 0, 130); Wheel.Position = UDim2.new(0, 10, 0, 10); Wheel.Image = "rbxassetid://6020299385"; Wheel.BackgroundTransparency = 1; Wheel.ZIndex = 21; Wheel.Parent = CPFrame
+	Wheel.Size = UDim2.new(0, 140, 0, 140); Wheel.Position = UDim2.new(0, 10, 0, 10)
+	Wheel.Image = "rbxassetid://2849323573"; Wheel.BackgroundTransparency = 1; Wheel.ZIndex = 51; Wheel.Parent = CPFrame
+	
 	local Picker = Instance.new("Frame")
-	Picker.Size = UDim2.new(0, 10, 0, 10); Picker.BackgroundColor3 = Color3.new(1,1,1); Picker.ZIndex = 22; Picker.Parent = Wheel; Instance.new("UICorner", Picker).CornerRadius = UDim.new(1,0)
-	local stroke = Instance.new("UIStroke", Picker); stroke.Thickness = 2; stroke.Color = Color3.new(0,0,0)
+	Picker.Size = UDim2.new(0, 12, 0, 12); Picker.BackgroundColor3 = Color3.new(1,1,1); Picker.ZIndex = 52; Picker.Parent = Wheel; Instance.new("UICorner", Picker).CornerRadius = UDim.new(1,0)
+	local pStroke = Instance.new("UIStroke", Picker); pStroke.Thickness = 2; pStroke.Color = Color3.new(0,0,0)
+	
 	local drag = false
-	local function up(input)
-		local center = Wheel.AbsolutePosition + (Wheel.AbsoluteSize/2)
-		local vec = Vector2.new(input.Position.X, input.Position.Y) - center
-		local ang = math.atan2(vec.Y, vec.X)
-		local rad = math.min(vec.Magnitude, Wheel.AbsoluteSize.X/2)
-		Picker.Position = UDim2.new(0.5, math.cos(ang)*rad - 5, 0.5, math.sin(ang)*rad - 5)
-		callback(Color3.fromHSV((math.pi - ang) / (2 * math.pi), rad / (Wheel.AbsoluteSize.X/2), 1))
+	local function update(input)
+		local center = Wheel.AbsolutePosition + (Wheel.AbsoluteSize / 2)
+		local inputPos = Vector2.new(input.Position.X, input.Position.Y)
+		local vec = inputPos - center
+		local angle = math.atan2(vec.Y, vec.X)
+		local radius = math.min(vec.Magnitude, Wheel.AbsoluteSize.X / 2)
+		
+		Picker.Position = UDim2.new(0.5, math.cos(angle) * radius - 6, 0.5, math.sin(angle) * radius - 6)
+		
+		local hue = (math.pi - angle) / (2 * math.pi)
+		local sat = radius / (Wheel.AbsoluteSize.X / 2)
+		local color = Color3.fromHSV(hue, sat, 1)
+		callback(color)
 	end
-	Wheel.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then drag = true up(i) end end)
-	UserInputService.InputChanged:Connect(function(i) if drag and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then up(i) end end)
-	UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then drag = false end end)
+	
+	Wheel.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+			drag = true
+			update(i)
+		end
+	end)
+	
+	UserInputService.InputChanged:Connect(function(i)
+		if drag and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+			update(i)
+		end
+	end)
+	
+	UserInputService.InputEnded:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+			drag = false
+		end
+	end)
 end
 
 function Cinox.Init(manifest)
-	local ScreenGui = Instance.new("ScreenGui"); ScreenGui.Name = manifest.Name; ScreenGui.ResetOnSpawn = false; ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+	local ScreenGui = Instance.new("ScreenGui"); ScreenGui.Name = manifest.Name; ScreenGui.ResetOnSpawn = false; ScreenGui.DisplayOrder = 10; ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 	local isMobile = UserInputService.TouchEnabled
 	local MainFrame = Instance.new("Frame"); MainFrame.Active = true; MainFrame.Parent = ScreenGui; Instance.new("UICorner", MainFrame)
 	MainFrame.Size = isMobile and UDim2.new(0, 450, 0, 280) or UDim2.new(0, 600, 0, 400)
@@ -106,10 +134,10 @@ function Cinox.Init(manifest)
 		function TabObj:AddTool(t)
 			local p = (t["Do.POM"] and t.PartOfMenu and Lib.POMs[t.PartOfMenu]) or Page
 			local b = Instance.new("TextButton"); b.Size = (p == Page and lay == "TABEL") and (isMobile and UDim2.new(0, 100, 0, 100) or UDim2.new(0, 130, 0, 130)) or UDim2.new(1, 0, 0, 30)
-			b.Text = "  " .. t.Name; b.BackgroundColor3 = Color3.fromRGB(50,50,50); b.TextColor3 = Color3.new(1,1,1); b.Parent = p; Instance.new("UICorner", b); b.TextWrapped = true; b.TextTruncate = "AtEnd"; b.TextXAlignment = "Left"
+			b.Text = "  " .. t.Name; b.BackgroundColor3 = Color3.fromRGB(50,50,50); b.TextColor3 = Color3.new(1,1,1); b.Parent = p; Instance.new("UICorner", b); b.TextWrapped = true; b.TextTruncate = "AtEnd"; b.TextXAlignment = "Left"; b.ClipsDescendants = false
 			
 			if t.Look == "ColorPick" then
-				local ind = Instance.new("Frame"); ind.Size = UDim2.new(0, 15, 0, 15); ind.Position = UDim2.new(1, -25, 0.5, -7.5); ind.BackgroundColor3 = Color3.new(1,1,1); ind.Parent = b; Instance.new("UICorner", ind)
+				local ind = Instance.new("Frame"); ind.Size = UDim2.new(0, 15, 0, 15); ind.Position = UDim2.new(1, -25, 0.5, -7.5); ind.BackgroundColor3 = Color3.new(1,1,1); ind.ZIndex = 5; ind.Parent = b; Instance.new("UICorner", ind)
 				b.MouseButton1Click:Connect(function() CreateColorPicker(b, function(c) ind.BackgroundColor3 = c if Lib.Scripts[t.Name] then Lib.Scripts[t.Name](c) end end) end)
 			elseif t.Look == "Toggle" then
 				local state = false
