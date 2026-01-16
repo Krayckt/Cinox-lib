@@ -24,17 +24,67 @@ end
 -- Utility: Color Picker Fenster
 local function OpenPicker(mainFrame, accent, callback)
     if mainFrame:FindFirstChild("CP_Window") then mainFrame.CP_Window:Destroy() return end
-    local CP = Instance.new("Frame"); CP.Name = "CP_Window"; CP.Size = UDim2.new(0, 160, 0, 180); CP.Position = UDim2.new(1, 10, 0, 0); CP.BackgroundColor3 = Color3.fromRGB(25,25,25); CP.Parent = mainFrame; CP.ZIndex = 100
-    Instance.new("UICorner", CP); local s = Instance.new("UIStroke", CP); s.Color = accent; s.Thickness = 1.5
-    local Wheel = Instance.new("ImageButton"); Wheel.Size = UDim2.new(0, 130, 0, 130); Wheel.Position = UDim2.new(0.5, -65, 0, 10); Wheel.Image = "rbxassetid://7393858638"; Wheel.BackgroundTransparency = 1; Wheel.Parent = CP; Wheel.ZIndex = 101
-    local Pick = Instance.new("Frame"); Pick.Size = UDim2.new(0, 10, 0, 10); Pick.BackgroundColor3 = Color3.new(1,1,1); Pick.Parent = Wheel; Pick.ZIndex = 102; Instance.new("UICorner", Pick).CornerRadius = UDim.new(1,0)
-    local drag = false
-    local function up(i)
-        local rel = Vector2.new(i.Position.X, i.Position.Y) - (Wheel.AbsolutePosition + Wheel.AbsoluteSize/2)
-        local angle = math.atan2(rel.Y, rel.X); local dist = math.min(rel.Magnitude, 65)
-        Pick.Position = UDim2.new(0.5, math.cos(angle)*dist-5, 0.5, math.sin(angle)*dist-5)
-        callback(Color3.fromHSV(((math.deg(angle)+180)%360)/360, dist/65, 1))
+    
+    local CP = Instance.new("Frame")
+    CP.Name = "CP_Window"; CP.Size = UDim2.new(0, 160, 0, 180); CP.Position = UDim2.new(1, 10, 0, 0)
+    CP.BackgroundColor3 = Color3.fromRGB(25, 25, 25); CP.Parent = mainFrame; CP.ZIndex = 100
+    Instance.new("UICorner", CP)
+    local s = Instance.new("UIStroke", CP); s.Color = accent; s.Thickness = 1.5
+
+    local Wheel = Instance.new("ImageButton")
+    Wheel.Size = UDim2.new(0, 130, 0, 130); Wheel.Position = UDim2.new(0.5, -65, 0, 10)
+    Wheel.Image = "rbxassetid://7393858638"; Wheel.BackgroundTransparency = 1; Wheel.Parent = CP; Wheel.ZIndex = 101
+
+    local Pick = Instance.new("Frame")
+    Pick.Size = UDim2.new(0, 10, 0, 10); Pick.BackgroundColor3 = Color3.new(1, 1, 1); Pick.Parent = Wheel; Pick.ZIndex = 102
+    Instance.new("UICorner", Pick).CornerRadius = UDim.new(1, 0)
+
+    local dragging = false
+
+    local function updateColor(input)
+        -- Berechnet die Position relativ zur Mitte des Rades, egal ob Touch oder Maus
+        local inputPos = input.Position
+        local wheelCenter = Wheel.AbsolutePosition + (Wheel.AbsoluteSize / 2)
+        local delta = Vector2.new(inputPos.X, inputPos.Y) - wheelCenter
+        
+        local angle = math.atan2(delta.Y, delta.X)
+        local distance = math.min(delta.Magnitude, 65) -- 65 ist der Radius (130/2)
+        
+        -- Punkt bewegen
+        Pick.Position = UDim2.new(0.5, math.cos(angle) * distance - 5, 0.5, math.sin(angle) * distance - 5)
+        
+        -- Farbe berechnen (HSV)
+        local h = ((math.deg(angle) + 180) % 360) / 360
+        local s = distance / 65
+        callback(Color3.fromHSV(h, s, 1))
     end
+
+    -- Input Events für PC & Mobile
+    Wheel.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            updateColor(input)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            updateColor(input)
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1, -20, 0, 25); b.Position = UDim2.new(0, 10, 1, -30); b.Text = "Fertig"
+    b.TextColor3 = Color3.new(1, 1, 1); b.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    b.Parent = CP; Instance.new("UICorner", b)
+    b.MouseButton1Click:Connect(function() CP:Destroy() end)
+end
     Wheel.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then drag = true up(i) end end)
     UserInputService.InputChanged:Connect(function(i) if drag and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then up(i) end end)
     UserInputService.InputEnded:Connect(function() drag = false end)
